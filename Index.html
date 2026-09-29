@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktives Lernen: Ursprungsgeraden & Steigung</title>
+    <!-- KaTeX CDN für mathematische Formeln ohne Dollarzeichen -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="initKaTeX();"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0f172a;
+            --accent: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text: #334155;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --pflicht: #ea580c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--secondary), var(--primary-dark));
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        /* Navigation */
+        nav {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 2px solid var(--border);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        nav button {
+            background: none;
+            border: none;
+            padding: 1rem 1.2rem;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+        nav button:hover {
+            color: var(--primary);
+            background: #eff6ff;
+        }
+
+        nav button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .card h3 {
+            color: var(--primary-dark);
+            margin: 1rem 0 0.5rem 0;
+        }
+
+        /* Canvas Interactive Tool */
+        .interactive-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 1.5rem;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .interactive-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        canvas {
+            background: white;
+            border-radius: 6px;
+            border: 1fr solid var(--border);
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 0.5rem;
+        }
+
+        .badge-pflicht {
+            background: #ffedd5;
+            color: var(--pflicht);
+            border: 1px solid #fdba74;
+        }
+
+        .badge-wahl {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        /* Task styling */
+        .task-box {
+            border-left: 4px solid var(--primary);
+            background: #fafafa;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .task-box.pflicht {
+            border-left-color: var(--pflicht);
+            background: #fff7ed;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+
+        .task-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .notebook-notice {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-style: italic;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        /* Solution Lock Box */
+        .solution-unlock {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .code-input {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            width: 120px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .solution-content {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            color: #14532d;
+        }
+
+        /* Merkeintrag Dropdown Styles */
+        .merkeintrag-box {
+            background: #eff6ff;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .merkeintrag-title {
+            color: var(--primary-dark);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        select.gap-select {
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            background: white;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .final-blue-box {
+            display: none;
+            background: #dbeafe;
+            border: 3px double var(--primary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 10px rgba(37,99,235,0.15);
+        }
+
+        .final-blue-box h3 {
+            color: #1e40af;
+            border-bottom: 2px solid #93c5fd;
+            padding-bottom: 0.3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Lineare Funktionen & Steigung</h1>
+    <p>Mathematik 8. Klasse – Interaktive Lernumgebung</p>
+</header>
+
+<nav>
+    <button class="nav-btn active" onclick="openTab('tab1')">1. Steigungsdreieck</button>
+    <button class="nav-btn" onclick="openTab('tab2')">2. Zeichnen & Ablesen</button>
+    <button class="nav-btn" onclick="openTab('tab3')">3. Die Punktprobe</button>
+    <button class="nav-btn" onclick="openTab('tab4')">4. Sachaufgaben</button>
+    <button class="nav-btn" onclick="openTab('tab5')">5. Vertiefung & Fehler</button>
+    <button class="nav-btn" onclick="openTab('tab6')">6. Merkeintrag</button>
+</nav>
+
+<div class="container">
+
+    <!-- ================= TAB 1: STEIGUNGSDREIECK ================= -->
+    <div id="tab1" class="tab-content active">
+        <div class="card">
+            <h2>1. Die Steigung \(m\) und das Steigungsdreieck</h2>
+            <p>
+                Bei einer Ursprungsgerade mit der Gleichung \(y = m \cdot x\) gibt die Zahl \(m\) die **Steigung** an.
+                Du kannst die Steigung mit einem **Steigungsdreieck** bestimmen:
+                \[ m = \frac{\text{Veränderung in } y\text{-Richtung}}{\text{Veränderung in } x\text{-Richtung}} = \frac{\Delta y}{\Delta x} \]
+            </p>
+
+            <div class="interactive-container">
+                <canvas id="canvas1" width="400" height="400"></canvas>
+                <div class="controls">
+                    <h3>Interaktives Modell</h3>
+                    <div class="control-group">
+                        <label for="sliderM1">Steigung \(m\): <span id="valM1">1.5</span></label>
+                        <input type="range" id="sliderM1" min="-3" max="3" step="0.5" value="1.5" oninput="updateCanvas1()">
+                    </div>
+                    <div class="control-group">
+                        <label for="sliderDX1">Breite \(\Delta x\): <span id="valDX1">2</span></label>
+                        <input type="range" id="sliderDX1" min="1" max="4" step="1" value="2" oninput="updateCanvas1()">
+                    </div>
+                    <p id="calcM1" style="font-weight: bold; color: var(--primary-dark);"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aufgaben Tab 1 -->
+        <div class="card">
+            <h2>Aufgaben zum Steigungsdreieck</h2>
+
+            <!-- Aufgabe 1 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 1</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Gegeben sind die Graphen der Funktionen \(f, g, h\) und \(k\). Ordne ihnen jeweils das passende Steigungsdreieck (A, B, C oder D) und die passende Steigung (\(m=\frac{1}{3}\), \(m=3\), \(m=\frac{2}{5}\), \(m=\frac{5}{2}\)) zu.</p>
+                <div class="notebook-notice">📝 Bearbeite diese Aufgabe vollständig in deinem Merkheft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task1" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task1', 'A7K2')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task1">
+                    <strong>Lösung:</strong><br>
+                    • Graph \(f\): Steigung \(m = \frac{1}{3}\) \(\rightarrow\) Steigungsdreieck C (Breite 3, Höhe 1)<br>
+                    • Graph \(g\): Steigung \(m = 3\) \(\rightarrow\) Steigungsdreieck B (Breite 1, Höhe 3)<br>
+                    • Graph \(h\): Steigung \(m = \frac{5}{2} = 2{,}5\) \(\rightarrow\) Steigungsdreieck A (Breite 2, Höhe 5)<br>
+                    • Graph \(k\): Steigung \(m = \frac{2}{5} = 0{,}4\) \(\rightarrow\) Steigungsdreieck D (Breite 5, Höhe 2)
+                </div>
+            </div>
+
+            <!-- Aufgabe 2 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 2</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Übertrage die Geraden jeweils in dein Heft und zeichne drei verschiedene beschriftete Steigungsdreiecke ein für:</p>
+                <p>a) \(y = 2x\) &nbsp;&nbsp;&nbsp; b) \(y = 0{,}5x\) &nbsp;&nbsp;&nbsp; c) \(y = -2x\) &nbsp;&nbsp;&nbsp; d) \(y = -\frac{1}{3}x\)</p>
+                <div class="notebook-notice">📝 Zeichne die Koordinatensysteme sauber mit Lineal ins Heft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task2" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task2', 'B9M4')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task2">
+                    <strong>Lösung / Kontrolle:</strong><br>
+                    Egal wie groß das Steigungsdreieck gewählt wird, der Quotient \(\frac{\Delta y}{\Delta x}\) muss immer gekürzt die Steigung ergeben.<br>
+                    a) Z. B. \(1\) nach rechts, \(2\) nach oben ODER \(2\) nach rechts, \(4\) nach oben.<br>
+                    b) Z. B. \(2\) nach rechts, \(1\) nach oben ODER \(4\) nach rechts, \(2\) nach oben.<br>
+                    c) Z. B. \(1\) nach rechts, \(2\) nach unten ODER \(2\) nach rechts, \(4\) nach unten.<br>
+                    d) Z. B. \(3\) nach rechts, \(1\) nach unten ODER \(6\) nach rechts, \(2\) nach unten.
+                </div>
+            </div>
+
+            <!-- Aufgabe 7 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 7 (Teste dich!)</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Zeichne den Graphen der Funktion \(f\) mithilfe eines geeigneten Steigungsdreiecks:</p>
+                <p>a) \(f(x) = 2x\) &nbsp;&nbsp;&nbsp; b) \(f(x) = -\frac{1}{3}x\) &nbsp;&nbsp;&nbsp; c) \(f(x) = -5x\) &nbsp;&nbsp;&nbsp; d) \(f(x) = -\frac{3}{2}x\)</p>
+                <div class="notebook-notice">📝 Zeichne die Geraden in dein Heft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task7" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task7', 'G1Z5')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task7">
+                    <strong>Lösung:</strong><br>
+                    a) Start bei \((0|0)\), 1 Einheit nach rechts, 2 nach oben. Punkt \((1|2)\).<br>
+                    b) Start bei \((0|0)\), 3 Einheiten nach rechts, 1 nach unten. Punkt \((3|-1)\).<br>
+                    c) Start bei \((0|0)\), 1 Einheit nach rechts, 5 nach unten. Punkt \((1|-5)\).<br>
+                    d) Start bei \((0|0)\), 2 Einheiten nach rechts, 3 nach unten. Punkt \((2|-3)\).
+                </div>
+            </div>
+
+            <!-- Aufgabe 8 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 8</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Bestimme die Gleichungen der Ursprungsgeraden \(f, g, h\) und \(k\) aus dem Koordinatensystem in der Buchabbildung.</p>
+                <div class="notebook-notice">📝 Notiere die Funktionsgleichungen im Heft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task8" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task8', 'H8V3')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task8">
+                    <strong>Lösung:</strong><br>
+                    • \(f(x) = \frac{1}{2}x\) (oder \(0{,}5x\))<br>
+                    • \(g(x) = -\frac{2}{3}x\)<br>
+                    • \(h(x) = -2x\)<br>
+                    • \(k(x) = \frac{1}{4}x\) (oder \(0{,}25x\))
+                </div>
+            </div>
+
+            <!-- Aufgabe 10 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 10</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Ordne die Geraden nach der Steigung. Beginne mit der kleinsten Steigung.</p>
+                <p>a) \(g(x) = -\frac{1}{3}x\), \(h(x) = x\), \(i(x) = -\frac{4}{3}x\), \(k(x) = 0{,}2x\), \(l(x) = 1{,}2x\), \(m(x) = 2x\)</p>
+                <p>b) \(g(x) = -0{,}9x\), \(h(x) = \frac{5}{4}x\), \(i(x) = -1{,}7x\), \(k(x) = \frac{2}{3}x\), \(l(x) = -2{,}5x\), \(m(x) = -0{,}5x\)</p>
+                <p><em>Beachte den Tipp: \(m = -2\) ist kleiner als \(m = -1\), obwohl der Graph steiler ist!</em></p>
+                <div class="notebook-notice">📝 Schreibe die geordnete Reihenfolge in dein Heft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task10" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task10', 'K2Q4')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task10">
+                    <strong>Lösung:</strong><br>
+                    a) \(i(x) = -\frac{4}{3}x\) (\(-1{,}33\)) &lt; \(g(x) = -\frac{1}{3}x\) (\(-0{,}33\)) &lt; \(k(x) = 0{,}2x\) &lt; \(h(x) = x\) (\(1\)) &lt; \(l(x) = 1{,}2x\) &lt; \(m(x) = 2x\)<br>
+                    b) \(l(x) = -2{,}5x\) &lt; \(i(x) = -1{,}7x\) &lt; \(g(x) = -0{,}9x\) &lt; \(m(x) = -0{,}5x\) &lt; \(k(x) = \frac{2}{3}x\) (\(0{,}67\)) &lt; \(h(x) = \frac{5}{4}x\) (\(1{,}25\))
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= TAB 2: ZEICHNEN UND ABLESEN ================= -->
+    <div id="tab2" class="tab-content">
+        <div class="card">
+            <h2>2. Graphen zeichnen & Funktionsgleichung bestimmen</h2>
+            <p>
+                <strong>Graphen zeichnen:</strong> Gehe vom Ursprung \((0|0)\) entsprechend der Steigung \(m = \frac{\text{Höhe}}{\text{Breite}}\) nach rechts und oben/unten. Verbinde den Ursprung mit dem neuen Punkt.<br>
+                <strong>Gleichung ablesen:</strong> Suche einen Punkt \(P(x|y)\) auf der Geraden, dessen Koordinaten genau auf dem Gitter liegen. Berechne \(m = \frac{y}{x}\).
+            </p>
+
+            <div class="interactive-container">
+                <canvas id="canvas2" width="400" height="400"></canvas>
+                <div class="controls">
+                    <h3>Interaktiver Ablese-Trainer</h3>
+                    <p>Verschiebe den Punkt \(P\) auf der Geraden:</p>
+                    <div class="control-group">
+                        <label for="sliderX2">x-Koordinate von P: <span id="valX2">2</span></label>
+                        <input type="range" id="sliderX2" min="1" max="4" step="1" value="2" oninput="updateCanvas2()">
+                    </div>
+                    <div class="control-group">
+                        <label for="sliderM2">Geradensteigung \(m\): <span id="valM2">-0.75</span></label>
+                        <input type="range" id="sliderM2" min="-2" max="2" step="0.25" value="-0.75" oninput="updateCanvas2()">
+                    </div>
+                    <p id="calcM2" style="font-weight: bold; color: var(--primary-dark);"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aufgaben Tab 2 -->
+        <div class="card">
+            <h2>Aufgaben zum Zeichnen und Ablesen</h2>
+
+            <!-- Aufgabe 3 (PFLICHT) -->
+            <div class="task-box pflicht">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 3</span>
+                    <span class="badge badge-pflicht">⭐ Pflichtaufgabe</span>
+                </div>
+                <p>Zeichne den Graphen der Funktion \(f\) mithilfe eines geeigneten beschrifteten Steigungsdreiecks in dein Heft:</p>
+                <p>a) \(f(x) = x\) &nbsp;&nbsp;&nbsp; b) \(f(x) = 3x\) &nbsp;&nbsp;&nbsp; c) \(f(x) = -\frac{3}{2}x\) &nbsp;&nbsp;&nbsp; d) \(f(x) = -2x\)</p>
+                <div class="notebook-notice">📝 Pflichtaufgabe: Vollständig und sauber im Heft zeichnen!</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task3" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task3', 'C3P8')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task3">
+                    <strong>Lösung / Zeichnungskontrolle:</strong><br>
+                    a) \(f(x) = x\): Vom Ursprung \(1\) nach rechts, \(1\) nach oben. Gerade geht durch \((1|1)\).<br>
+                    b) \(f(x) = 3x\): Vom Ursprung \(1\) nach rechts, \(3\) nach oben. Gerade geht durch \((1|3)\).<br>
+                    c) \(f(x) = -\frac{3}{2}x\): Vom Ursprung \(2\) nach rechts, \(3\) nach unten. Gerade geht durch \((2|-3)\).<br>
+                    d) \(f(x) = -2x\): Vom Ursprung \(1\) nach rechts, \(2\) nach unten. Gerade geht durch \((1|-2)\).
+                </div>
+            </div>
+
+            <!-- Aufgabe 4 (PFLICHT) -->
+            <div class="task-box pflicht">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 4</span>
+                    <span class="badge badge-pflicht">⭐ Pflichtaufgabe</span>
+                </div>
+                <p>Bestimme die Funktionsgleichungen der Ursprungsgeraden \(f, g, h\) und \(k\) in der Figur aus der Buchseite (S. 46, Fig. zu Aufg. 4).</p>
+                <div class="notebook-notice">📝 Notiere die 4 Funktionsgleichungen mit Rechenweg in deinem Heft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task4" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task4', 'D4R1')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task4">
+                    <strong>Lösung:</strong><br>
+                    • Gerade \(f\): Punkt \((4|1)\) ablesen \(\rightarrow m = \frac{1}{4} = 0{,}25 \rightarrow f(x) = \frac{1}{4}x\)<br>
+                    • Gerade \(g\): Punkt \((2|-1)\) ablesen \(\rightarrow m = -\frac{1}{2} = -0{,}5 \rightarrow g(x) = -\frac{1}{2}x\)<br>
+                    • Gerade \(h\): Punkt \((1|5)\) ablesen \(\rightarrow m = \frac{5}{1} = 5 \rightarrow h(x) = 5x\)<br>
+                    • Gerade \(k\): Punkt \((5|-1)\) ablesen \(\rightarrow m = -\frac{1}{5} = -0{,}2 \rightarrow k(x) = -\frac{1}{5}x\)
+                </div>
+            </div>
+
+            <!-- Aufgabe 11 (PFLICHT) -->
+            <div class="task-box pflicht">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 11</span>
+                    <span class="badge badge-pflicht">⭐ Pflichtaufgabe</span>
+                </div>
+                <p>a) Bestimme die Gleichung der Ursprungsgeraden, die durch den Punkt \(P\) verläuft. Führe eine Probe durch:</p>
+                <p>(1) \(P(1|6)\) &nbsp;&nbsp;&nbsp; (2) \(P(2|6)\) &nbsp;&nbsp;&nbsp; (3) \(P(3|6)\) &nbsp;&nbsp;&nbsp; (4) \(P(4|6)\)</p>
+                <p>b) Notiere eine Beobachtung dazu, wie sich die Steigung von (1) zu (4) verändert.</p>
+                <div class="notebook-notice">📝 Berechne alle 4 Gleichungen und schreibe den Beobachtungssatz ins Heft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task11" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task11', 'L1B9')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task11">
+                    <strong>Lösung:</strong><br>
+                    a) (1) \(m = \frac{6}{1} = 6 \rightarrow f_1(x) = 6x\)<br>
+                    (2) \(m = \frac{6}{2} = 3 \rightarrow f_2(x) = 3x\)<br>
+                    (3) \(m = \frac{6}{3} = 2 \rightarrow f_3(x) = 2x\)<br>
+                    (4) \(m = \frac{6}{4} = 1{,}5 \rightarrow f_4(x) = 1{,}5x\)<br>
+                    b) <strong>Beobachtung:</strong> Da der \(y\)-Wert konstant (\(6\)) bleibt, aber der \(x\)-Wert immer größer wird, wird die Steigung \(m\) immer kleiner. Die Gerade verläuft zunehmend flacher.
+                </div>
+            </div>
+
+            <!-- Aufgabe 14 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 14</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Mia zeichnet Steigungsdreiecke immer unter den Geraden ein. Sie sagt: <em>„So kann ich die Steigung der Geraden sofort ablesen. Ich muss mir nur den Bruchstrich dazu denken und das Vorzeichen überlegen.“</em> Erklärt euch gegenseitig, was Mia damit meint.</p>
+                <div class="notebook-notice">📝 Erkläre Mias Idee in 2-3 Sätzen in deinem Heft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task14" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task14', 'P4E6')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task14">
+                    <strong>Lösung / Erklärung:</strong><br>
+                    Mia nutzt aus, dass die senkrechte Kathete des Dreiecks direkt der Höhe (\(\Delta y\)) entspricht und die waagerechte Kathete der Breite (\(\Delta x\)). Bildet man den Bruch \(\frac{\text{Höhe}}{\text{Breite}}\), hat man sofort den Betrag der Steigung. Fällt die Gerade nach rechts ab, setzt sie noch ein Minuszeichen davor.
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= TAB 3: PUNKTPROBE ================= -->
+    <div id="tab3" class="tab-content">
+        <div class="card">
+            <h2>3. Rechnerische Punktprobe</h2>
+            <p>
+                Um rechnerisch zu prüfen, ob ein Punkt \(P(x_0 | y_0)\) auf dem Graphen einer Funktion \(f(x) = m \cdot x\) liegt:
+            </p>
+            <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                <li>Setze den \(x\)-Wert \(x_0\) in die Funktionsgleichung ein und berechne \(f(x_0)\).</li>
+                <li>Vergleiche das Ergebnis mit dem verlangten \(y\)-Wert \(y_0\).</li>
+                <li>Ist das Ergebnis gleich, **liegt der Punkt auf dem Graphen**. Sonst nicht!</li>
+            </ol>
+
+            <div class="interactive-container">
+                <div style="width:100%;">
+                    <h3>Interaktiver Punktproben-Rechner</h3>
+                    <p>Prüfe, ob \(P(x|y)\) auf \(f(x) = 3,5 \cdot x\) liegt:</p>
+                    <div style="display:flex; gap: 0.5rem; margin: 1rem 0;">
+                        <input type="number" id="ptX" value="2" style="width:80px; padding:0.4rem;" placeholder="x">
+                        <input type="number" id="ptY" value="7" style="width:80px; padding:0.4rem;" placeholder="y">
+                        <button class="btn" onclick="calcPointProbe()">Punkt testen</button>
+                    </div>
+                    <div id="probeResult" style="font-weight:bold; padding: 0.5rem; border-radius:4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aufgaben Tab 3 -->
+        <div class="card">
+            <h2>Aufgaben zur Punktprobe</h2>
+
+            <!-- Aufgabe 5 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 5</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Berechne im Kopf, ob die Punkte \(P\) und \(Q\) auf dem Graphen der Funktion \(f\) liegen:</p>
+                <p>a) \(P(2|17)\); \(Q(-3|-21)\); \(f(x) = 7x\)</p>
+                <p>b) \(P(-5|-1)\); \(Q(3|0{,}6)\); \(f(x) = 0{,}2x\)</p>
+                <p>c) \(P(0{,}5|1)\); \(Q(-4|-8)\); \(f(x) = -2x\)</p>
+                <div class="notebook-notice">📝 Notiere die Antworten mit kurzer Begründung im Heft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task5" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task5', 'E2W6')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task5">
+                    <strong>Lösung:</strong><br>
+                    a) \(f(2) = 7 \cdot 2 = 14 \neq 17 \rightarrow P\) liegt **nicht** drauf.<br>
+                    \(f(-3) = 7 \cdot (-3) = -21 \rightarrow Q\) liegt **drauf**.<br>
+                    b) \(f(-5) = 0{,}2 \cdot (-5) = -1 \rightarrow P\) liegt **drauf**.<br>
+                    \(f(3) = 0{,}2 \cdot 3 = 0{,}6 \rightarrow Q\) liegt **drauf**.<br>
+                    c) \(f(0{,}5) = -2 \cdot 0{,}5 = -1 \neq 1 \rightarrow P\) liegt **nicht** drauf.<br>
+                    \(f(-4) = -2 \cdot (-4) = 8 \neq -8 \rightarrow Q\) liegt **nicht** drauf.
+                </div>
+            </div>
+
+            <!-- Aufgabe 12 (PFLICHT) -->
+            <div class="task-box pflicht">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 12</span>
+                    <span class="badge badge-pflicht">⭐ Pflichtaufgabe</span>
+                </div>
+                <p>Gegeben sind die Funktionen \(f(x) = 3x\), \(g(x) = 0{,}5x\) und \(h(x) = -2{,}5x\). Prüfe rechnerisch, ob der Punkt \(P\) auf einem Graphen von \(f, g\) oder \(h\) liegt:</p>
+                <p>a) \(P(-2{,}1 | -6{,}3)\) &nbsp;&nbsp;&nbsp; b) \(P(\frac{2}{3} | -\frac{5}{4})\) &nbsp;&nbsp;&nbsp; c) \(P(\frac{2}{3} | 2)\) &nbsp;&nbsp;&nbsp; d) \(P(-31 | -7{,}5)\)</p>
+                <p>e) \(P(-8 | 20)\) &nbsp;&nbsp;&nbsp; f) \(P(\frac{3}{4} | -0{,}75)\) &nbsp;&nbsp;&nbsp; g) \(P(150 | 75)\) &nbsp;&nbsp;&nbsp; h) \(P(25 | -62{,}5)\)</p>
+                <div class="notebook-notice">📝 Pflichtaufgabe: Schreibe für jeden Punkt die ausführliche Rechnung ins Heft!</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task12" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task12', 'M2C8')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task12">
+                    <strong>Lösung:</strong><br>
+                    a) \(f(-2{,}1) = 3 \cdot (-2{,}1) = -6{,}3 \rightarrow\) **liegt auf \(f\)**.<br>
+                    b) \(h(\frac{2}{3}) = -2{,}5 \cdot \frac{2}{3} = -\frac{5}{3} \neq -\frac{5}{4} \rightarrow\) **liegt auf keinem Graphen**.<br>
+                    c) \(f(\frac{2}{3}) = 3 \cdot \frac{2}{3} = 2 \rightarrow\) **liegt auf \(f\)**.<br>
+                    d) Für keinen der drei Funktionen ergibt der Einsetzwert \(-7{,}5 \rightarrow\) **auf keinem Graphen**.<br>
+                    e) \(h(-8) = -2{,}5 \cdot (-8) = 20 \rightarrow\) **liegt auf \(h\)**.<br>
+                    f) Keine Passung für den angegebenen x-Wert \(\rightarrow\) **auf keinem Graphen**.<br>
+                    g) \(g(150) = 0{,}5 \cdot 150 = 75 \rightarrow\) **liegt auf \(g\)**.<br>
+                    h) \(h(25) = -2{,}5 \cdot 25 = -62{,}5 \rightarrow\) **liegt auf \(h\)**.
+                </div>
+            </div>
+
+            <!-- Aufgabe 16 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 16 (Teste dich!)</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>a) Zeichne eine Gerade durch die Punkte \(A(3{,}5 | 1{,}5)\) und \(B(7 | 3)\) in dein Heft. Bestimme die Steigung und Funktionsgleichung.</p>
+                <p>b) Prüfe rechnerisch, ob die Punkte \(P(4|2)\), \(Q(-\frac{3}{2} | -1)\) und \(R(-3 | -1{,}25)\) auf der Geraden liegen.</p>
+                <div class="notebook-notice">📝 Zeichnung & Rechnung ins Heft.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task16" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task16', 'R6G1')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task16">
+                    <strong>Lösung:</strong><br>
+                    a) Steigung \(m = \frac{3 - 1{,}5}{7 - 3{,}5} = \frac{1{,}5}{3{,}5} = \frac{3}{7} \rightarrow f(x) = \frac{3}{7}x\)<br>
+                    b) • \(P(4|2)\): \(f(4) = \frac{12}{7} \approx 1{,}71 \neq 2 \rightarrow\) liegt **nicht** drauf.<br>
+                    • \(Q(-\frac{3}{2} | -1)\): \(f(-\frac{3}{2}) = -\frac{9}{14} \neq -1 \rightarrow\) liegt **nicht** drauf.<br>
+                    • \(R(-3 | -1{,}25)\): \(f(-3) = -\frac{9}{7} \approx -1{,}28 \neq -1{,}25 \rightarrow\) liegt **nicht** drauf.
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= TAB 4: SACHAUFGABEN ================= -->
+    <div id="tab4" class="tab-content">
+        <div class="card">
+            <h2>4. Sach- und Anwendungsaufgaben</h2>
+            <p>
+                Bei proportionalen Zuordnungen im Alltag (z.B. Gewicht \(\rightarrow\) Preis, Zeit \(\rightarrow\) Strecke) beschreibt eine Ursprungsgerade den Zusammenhang. Die Steigung \(m\) entspricht dabei der **Einheiten-Rate** (z.B. Preis pro kg, Geschwindigkeit in km/h).
+            </p>
+        </div>
+
+        <!-- Aufgaben Tab 4 -->
+        <div class="card">
+            <h2>Kontextaufgaben für das Heft</h2>
+
+            <!-- Aufgabe 6 (PFLICHT) -->
+            <div class="task-box pflicht">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 6</span>
+                    <span class="badge badge-pflicht">⭐ Pflichtaufgabe</span>
+                </div>
+                <p>\(10\text{ Meter}\) einer \(45\text{ cm}\) breiten Alufolienrolle wiegen \(170\text{ g}\).</p>
+                <p>a) Erstelle eine Wertetabelle für die Funktion \(f\): Länge (in m) \(\rightarrow\) Gewicht (in g).</p>
+                <p>b) Zeichne den Graphen der Funktion \(f\) und ergänze ein beschriftetes Steigungsdreieck. (Wähle auf der x-Achse 1 Kästchen = 1 m, y-Achse 1 Kästchen = 10 g).</p>
+                <p>c) Gib die Funktionsgleichung an und ermittle, wie viel eine ganze Rolle Alufolie von \(150\text{ Metern}\) Länge wiegt.</p>
+                <div class="notebook-notice">📝 Pflichtaufgabe: Wertetabelle, Graph und Rechnungen ins Heft!</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task6" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task6', 'F6X9')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task6">
+                    <strong>Lösung:</strong><br>
+                    a) Pro Meter wiegt die Folie \(170 : 10 = 17\text{ g}\). Wertetabelle z. B.:<br>
+                    \(0\text{ m} \rightarrow 0\text{ g}\) | \(5\text{ m} \rightarrow 85\text{ g}\) | \(10\text{ m} \rightarrow 170\text{ g}\)<br>
+                    b) Steigungsdreieck z. B. bei \(10\text{ m}\) nach rechts und \(170\text{ g}\) nach oben.<br>
+                    c) Funktionsgleichung: \(f(x) = 17x\)<br>
+                    Gewicht bei \(150\text{ m}\): \(f(150) = 17 \cdot 150 = 2550\text{ g} = 2{,}55\text{ kg}\).
+                </div>
+            </div>
+
+            <!-- Aufgabe 9 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 9</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Aus \(8\text{ kg}\) Orangen erhält man durchschnittlich \(4\text{ Liter}\) Saft.</p>
+                <p>a) Erstelle eine Wertetabelle für Gewicht (in kg) \(\rightarrow\) Saftvolumen (in L).</p>
+                <p>b) Zeichne den Graphen der Funktion \(f\) und ergänze drei beschriftete Steigungsdreiecke.</p>
+                <p>c) Gib die Funktionsgleichung an und ermittle, wie viel Saft man aus \(20\text{ kg}\) Orangen erhält.</p>
+                <div class="notebook-notice">📝 Ins Heft bearbeiten.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task9" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task9', 'J5N7')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task9">
+                    <strong>Lösung:</strong><br>
+                    a) Pro kg Orangen erhält man \(\frac{4}{8} = 0{,}5\text{ Liter}\) Saft.<br>
+                    b) Steigungsdreiecke z. B. bei \(x=2, 4, 8\).<br>
+                    c) Gleichung: \(f(x) = 0{,}5x\). Für \(20\text{ kg}\): \(f(20) = 0{,}5 \cdot 20 = 10\text{ Liter Saft}\).
+                </div>
+            </div>
+
+            <!-- Aufgabe 15 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 15</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Bei einem Langstreckenflug legt ein Flugzeug in 5 Stunden nach Ende der Startphase \(4000\text{ km}\) zurück.</p>
+                <p>a) Zeichne den Graphen der Funktion \(f\) (Zeit \(t\) in h \(\rightarrow\) Weg in km).</p>
+                <p>b) Bestimme die Funktionsgleichung.</p>
+                <p>c) Berechne die Strecke nach \(45\text{ Minuten}\) und nach \(2{,}5\text{ Stunden}\).</p>
+                <p>d) Begründe kurz, warum negative Zahlen für \(t\) hier inhaltlich keinen Sinn ergeben.</p>
+                <div class="notebook-notice">📝 Ins Heft bearbeiten.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task15" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task15', 'Q5F2')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task15">
+                    <strong>Lösung:</strong><br>
+                    a) Graph im Heft mit Maßstab z.B. 1 h = 1 cm, 1000 km = 1 cm.<br>
+                    b) Geschwindigkeitsrate: \(4000 : 5 = 800\text{ km/h} \rightarrow f(t) = 800t\)<br>
+                    c) \(45\text{ min} = 0{,}75\text{ h} \rightarrow f(0{,}75) = 800 \cdot 0{,}75 = 600\text{ km}\).<br>
+                    Nach \(2{,}5\text{ h}: f(2{,}5) = 800 \cdot 2{,}5 = 2000\text{ km}\).<br>
+                    d) Negative Flugzeiten vor dem Messbeginn machen physikalisch für die zurückgelegte Flugstrecke keinen Sinn.
+                </div>
+            </div>
+
+            <!-- Aufgabe 17 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 17</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Federwaage (Masse in g \(\rightarrow\) Ausschlag in cm). Graph siehe Buch S. 48.</p>
+                <p>a) Lies die Funktionsgleichung von \(f\) ab.</p>
+                <p>b) Berechne, wie stark die Federwaage bei einem \(20\text{ g}\) schweren Gegenstand ausschlägt.</p>
+                <p>c) Begründe kurz, warum Zahlen kleiner als null hier keinen Sinn ergeben.</p>
+                <div class="notebook-notice">📝 Antwort ins Heft schreiben.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task17" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task17', 'S7H5')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task17">
+                    <strong>Lösung:</strong><br>
+                    a) Punkt \((200|5)\) ablesen \(\rightarrow m = \frac{5}{200} = 0{,}025 \rightarrow f(x) = 0{,}025x\)<br>
+                    b) \(f(20) = 0{,}025 \cdot 20 = 0{,}5\text{ cm}\).<br>
+                    c) Es gibt keine negativen Massen im Experiment.
+                </div>
+            </div>
+
+            <!-- Aufgabe 18 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 18</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Die Fluggeschwindigkeit von Kranichen beträgt \(50\text{ km/h}\). Die Funktion lautet \(f(x) = \frac{5}{6}x\) (Flugzeit \(x\) in min \(\rightarrow\) Strecke in km).</p>
+                <p>a) Zeichne den Graphen.</p>
+                <p>b) Lies am Graphen ab, wie weit Kraniche nach 90 Minuten geflogen sind.</p>
+                <p>c) Erkläre, wie man aus der Steigung die Geschwindigkeit herleiten kann.</p>
+                <div class="notebook-notice">📝 Ins Heft bearbeiten.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task18" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task18', 'T8J3')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task18">
+                    <strong>Lösung:</strong><br>
+                    a) Graph zeichnen (\(x\)-Achse in min, \(y\)-Achse in km).<br>
+                    b) Bei \(x = 90\text{ min}\) liest man \(y = 75\text{ km}\) ab.<br>
+                    c) Steigung \(\frac{5}{6}\) bedeutet: \(\frac{5}{6}\text{ km per Minute}\). Hochgerechnet auf eine Stunde (\(60\text{ min}\)): \(60 \cdot \frac{5}{6} = 50\text{ km/h}\).
+                </div>
+            </div>
+
+            <!-- Aufgabe 19 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 19</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Steigungen werden bei Straßen in Prozent angegeben (\(20\%\) Steigung = \(20\text{ m}\) Höhe auf \(100\text{ m}\) Horizontale).</p>
+                <p>a) Linus sagt zum Bergsteigen mit \(10\%\) vs. \(20\%\) Steigung: <em>„Dann ist der flachere Weg wohl doppelt so lang.“</em> Überprüfe mithilfe einer Zeichnung.</p>
+                <p>b) Beurteile die Aussagen von Lilly (Kletterwand \(100\%\) = senkrecht) und Paula (\(45^\circ\) = \(100\%\) Steigung).</p>
+                <div class="notebook-notice">📝 Stellungnahme ins Heft schreiben.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task19" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task19', 'U9K4')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task19">
+                    <strong>Lösung:</strong><br>
+                    a) Linus hat Recht: Bei halber Steigung benötigt man die doppelte waagerechte Distanz für dieselbe Höhe.<br>
+                    b) Lilly hat **Unrecht**: \(100\%\) Steigung bedeutet \(100\text{ m}\) Höhe auf \(100\text{ m}\) Weite, also genau einen \(45^\circ\)-Winkel (nicht senkrecht \(90^\circ\)). Paula hat Recht mit ihrer Aussage zu \(45^\circ\).
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= TAB 5: FEHLERANALYSE & VERTIEFUNG ================= -->
+    <div id="tab5" class="tab-content">
+        <div class="card">
+            <h2>5. Fehleranalyse & Grundwissen</h2>
+            <p>Aus Fehlern lernt man! Untersuche bei Steigungsdreiecken genau Vorzeichen und Ausrichtung der Katheten.</p>
+        </div>
+
+        <!-- Aufgaben Tab 5 -->
+        <div class="card">
+            <h2>Aufgaben zur Reflexion & Wiederholung</h2>
+
+            <!-- Aufgabe 13 (PFLICHT) -->
+            <div class="task-box pflicht">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 13 (Finde den Fehler!)</span>
+                    <span class="badge badge-pflicht">⭐ Pflichtaufgabe</span>
+                </div>
+                <p>Erkläre für die Abbildungen a), b), c) und d) auf S. 47 im Buch, was jeweils falsch gemacht wurde, und korrigiere im Heft:</p>
+                <p>a) \(f(x) = \frac{1}{2}x\); &nbsp; b) \(g(x) = \frac{1}{3}x\); &nbsp; c) \(h(x) = 2x\); &nbsp; d) \(k(x) = -\frac{3}{2}x\)</p>
+                <div class="notebook-notice">📝 Pflichtaufgabe: Erkläre alle 4 Fehler schriftlich im Heft und erstelle die Korrekturzeichnung.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task13" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task13', 'N3D7')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task13">
+                    <strong>Lösung / Fehlerkorrektur:</strong><br>
+                    • a) <strong>Fehler:</strong> Es wurde \(2\) nach oben und \(1\) nach rechts gezeichnet (\(m=2\)). Richtig für \(\frac{1}{2}\): \(2\) nach rechts, \(1\) nach oben.<br>
+                    • b) <strong>Fehler:</strong> Das Dreieck geht nach unten, obwohl die Steigung positiv ist. Richtig: Vom Ursprung \(3\) nach rechts und \(1\) nach oben.<br>
+                    • c) <strong>Fehler:</strong> Das Steigungsdreieck zeigt ein Steigungsverhältnis von \(\frac{1}{2}\) statt \(2\). Richtig: \(1\) nach rechts, \(2\) nach oben.<br>
+                    • d) <strong>Fehler:</strong> Das Vorzeichen wurde beim Anlegen vertauscht. Richtig: Vom Ursprung \(2\) nach rechts und \(3\) nach unten.
+                </div>
+            </div>
+
+            <!-- Aufgabe 20 -->
+            <div class="task-box">
+                <div class="task-header">
+                    <span class="task-title">Aufgabe 20 (Teste dein Grundwissen!)</span>
+                    <span class="badge badge-wahl">Wahlaufgabe</span>
+                </div>
+                <p>Berechne möglichst geschickt durch Ausmultiplizieren. Erläutere deine Rechenvorteile im Heft:</p>
+                <p>a) \([-25 + (-2)] \cdot (-4)\)</p>
+                <p>b) \(3 \cdot [-33 + (-5)]\)</p>
+                <p>c) \(180 \cdot \left(\frac{27}{180} - \frac{1}{90}\right)\)</p>
+                <div class="notebook-notice">📝 Ins Heft rechnen.</div>
+                <div class="solution-unlock">
+                    <input type="text" class="code-input" id="code-task20" placeholder="Code...">
+                    <button class="btn" onclick="checkCode('task20', 'V0L8')">Lösung anzeigen</button>
+                </div>
+                <div class="solution-content" id="sol-task20">
+                    <strong>Lösung:</strong><br>
+                    a) Ausmultiplizieren: \((-25) \cdot (-4) + (-2) \cdot (-4) = 100 + 8 = 108\).<br>
+                    b) Ausmultiplizieren: \(3 \cdot (-33) + 3 \cdot (-5) = -99 - 15 = -114\).<br>
+                    c) Ausmultiplizieren löst die Brüche auf: \(180 \cdot \frac{27}{180} - 180 \cdot \frac{1}{90} = 27 - 2 = 25\).
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= TAB 6: MERKEINTRAG ================= -->
+    <div id="tab6" class="tab-content">
+        <div class="card">
+            <h2>6. Geführter Merkeintrag für dein Heft</h2>
+            <p>Wähle die richtigen Begriffe aus den Dropdowns aus. Sobald alle Lücken korrekt gefüllt sind, erscheint der fertige **Merkkasten**, den du sauber in dein Merkheft übernimmst!</p>
+
+            <div class="merkeintrag-box">
+                <div class="merkeintrag-title">
+                    <span>📘 Merkeintrag: Ursprungsgeraden & Steigung</span>
+                </div>
+
+                <p style="line-height: 2.2;">
+                    Eine Ursprungsgerade hat die allgemeine Funktionsgleichung 
+                    <select class="gap-select" id="gap1">
+                        <option value="">-- wählen --</option>
+                        <option value="false">y = m + x</option>
+                        <option value="true">y = m · x</option>
+                        <option value="false">y = x / m</option>
+                    </select>.
+                    Der Graph verläuft stets durch den 
+                    <select class="gap-select" id="gap2">
+                        <option value="">-- wählen --</option>
+                        <option value="true">Koordinatenursprung (0|0)</option>
+                        <option value="false">Punkt (1|1)</option>
+                        <option value="false">Punkt (0|1)</option>
+                    </select>.<br>
+
+                    Die Zahl \(m\) gibt die 
+                    <select class="gap-select" id="gap3">
+                        <option value="">-- wählen --</option>
+                        <option value="false">Krümmung</option>
+                        <option value="true">Steigung</option>
+                        <option value="false">Länge</option>
+                    </select> 
+                    an. Sie lässt sich berechnen durch:
+                    \[ m = \frac{\text{Veränderung in } y\text{-Richtung}}{\text{Veränderung in } x\text{-Richtung}} \]
+
+                    Ist \(m > 0\), so 
+                    <select class="gap-select" id="gap4">
+                        <option value="">-- wählen --</option>
+                        <option value="true">steigt</option>
+                        <option value="false">fällt</option>
+                    </select> 
+                    die Gerade von links nach rechts. Ist \(m < 0\), so 
+                    <select class="gap-select" id="gap5">
+                        <option value="">-- wählen --</option>
+                        <option value="false">steigt</option>
+                        <option value="true">fällt</option>
+                    </select> 
+                    die Gerade.<br>
+
+                    Bei der **Punktprobe** setzt man die \(x\)-Koordinate in die Gleichung ein und prüft, ob das Ergebnis der 
+                    <select class="gap-select" id="gap6">
+                        <option value="">-- wählen --</option>
+                        <option value="false">x-Koordinate</option>
+                        <option value="true">y-Koordinate</option>
+                    </select> 
+                    des Punktes entspricht.
+                </p>
+
+                <button class="btn" style="margin-top: 1.5rem;" onclick="checkMerkeintrag()">Merkeintrag überprüfen</button>
+            </div>
+
+            <!-- Blaues Merkfenster zum Übertragen ins Heft -->
+            <div class="final-blue-box" id="finalMerkbox">
+                <h3>📌 Übertrage diesen Kasten jetzt in dein Merkheft:</h3>
+                <p><strong>MERKE: Ursprungsgeraden und Steigung</strong></p>
+                <br>
+                <p>• Eine Ursprungsgerade besitzt die Funktionsgleichung <strong>\(y = m \cdot x\)</strong>.</p>
+                <p>• Der Graph verläuft immer durch den <strong>Koordinatenursprung \((0|0)\)</strong>.</p>
+                <p>• Die Zahl <strong>\(m\)</strong> heißt <strong>Steigung</strong> der Geraden:</p>
+                <p style="text-align: center; margin: 0.5rem 0;">
+                    \[ m = \frac{\Delta y}{\Delta x} = \frac{\text{Höhe}}{\text{Breite}} \]
+                </p>
+                <p>• Ist \(m > 0\), steigt die Gerade. Ist \(m < 0\), fällt die Gerade.</p>
+                <p>• <strong>Punktprobe:</strong> Ein Punkt \(P(x_0|y_0)\) liegt auf der Geraden, wenn beim Einsetzen von \(x_0\) genau der Wert \(y_0\) herauskommt.</p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Navigation zwischen Tabs
+    function openTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+
+        // Refresh interactive canvases if visible
+        if(tabId === 'tab1') updateCanvas1();
+        if(tabId === 'tab2') updateCanvas2();
+    }
+
+    // Solution Code Verification
+    function checkCode(taskId, correctCode) {
+        const input = document.getElementById('code-' + taskId);
+        const solDiv = document.getElementById('sol-' + taskId);
+
+        if (input.value.trim().toUpperCase() === correctCode) {
+            solDiv.style.display = 'block';
+            input.style.borderColor = 'var(--success)';
+            input.disabled = true;
+        } else {
+            alert('Falscher Code! Bitte zeige deiner Lehrkraft zuerst deine ausgearbeitete Heftaufgabe.');
+            input.style.borderColor = 'var(--danger)';
+        }
+    }
+
+    // Canvas 1 Drawing Logic (Steigungsdreieck)
+    function updateCanvas1() {
+        const canvas = document.getElementById('canvas1');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const m = parseFloat(document.getElementById('sliderM1').value);
+        const dx = parseFloat(document.getElementById('sliderDX1').value);
+
+        document.getElementById('valM1').innerText = m;
+        document.getElementById('valDX1').innerText = dx;
+        
+        const dy = m * dx;
+        document.getElementById('calcM1').innerHTML = `\\(m = \\frac{\\Delta y}{\\Delta x} = \\frac{${dy}}{${dx}} = ${m}\\)`;
+        if(window.renderMathInElement) renderMathInElement(document.getElementById('calcM1'));
+
+        drawCoordinateSystem(ctx, canvas.width, canvas.height);
+
+        // Grid unit scale: 30px per unit, origin at (200, 200)
+        const scale = 35;
+        const ox = 200, oy = 200;
+
+        // Draw Line
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(ox - 4 * scale, oy + 4 * m * scale);
+        ctx.lineTo(ox + 4 * scale, oy - 4 * m * scale);
+        ctx.stroke();
+
+        // Draw Triangle
+        const x1 = ox;
+        const y1 = oy;
+        const x2 = ox + dx * scale;
+        const y2 = oy;
+        const x3 = ox + dx * scale;
+        const y3 = oy - dy * scale;
+
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(x3, y3);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Label Triangle Side
+        ctx.fillStyle = '#b45309';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText(`Δx = ${dx}`, x1 + (dx*scale)/2 - 15, oy + 18);
+        ctx.fillText(`Δy = ${dy}`, x2 + 8, y2 - (dy*scale)/2);
+    }
+
+    // Canvas 2 Drawing Logic (Ablesen)
+    function updateCanvas2() {
+        const canvas = document.getElementById('canvas2');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const px = parseFloat(document.getElementById('sliderX2').value);
+        const m = parseFloat(document.getElementById('sliderM2').value);
+
+        document.getElementById('valX2').innerText = px;
+        document.getElementById('valM2').innerText = m;
+
+        const py = m * px;
+        document.getElementById('calcM2').innerHTML = `Punkt \\(P(${px} | ${py})\\) \\(\\rightarrow m = \\frac{y}{x} = \\frac{${py}}{${px}} = ${m}\\)`;
+        if(window.renderMathInElement) renderMathInElement(document.getElementById('calcM2'));
+
+        drawCoordinateSystem(ctx, canvas.width, canvas.height);
+
+        const scale = 35;
+        const ox = 200, oy = 200;
+
+        // Draw Line
+        ctx.strokeStyle = '#1d4ed8';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(ox - 4 * scale, oy + 4 * m * scale);
+        ctx.lineTo(ox + 4 * scale, oy - 4 * m * scale);
+        ctx.stroke();
+
+        // Draw Point P
+        const canvasPx = ox + px * scale;
+        const canvasPy = oy - py * scale;
+
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(canvasPx, canvasPy, 6, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = '#dc2626';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(`P(${px}|${py})`, canvasPx + 10, canvasPy - 5);
+    }
+
+    // Helper for Axis Drawing
+    function drawCoordinateSystem(ctx, width, height) {
+        ctx.clearRect(0, 0, width, height);
+        const ox = width / 2;
+        const oy = height / 2;
+        const scale = 35;
+
+        // Grid
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= width; x += scale) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+        }
+        for (let y = 0; y <= height; y += scale) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+        }
+
+        // Axes
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+
+        // X-Axis
+        ctx.beginPath(); ctx.moveTo(10, oy); ctx.lineTo(width - 10, oy); ctx.stroke();
+        // Y-Axis
+        ctx.beginPath(); ctx.moveTo(ox, height - 10); ctx.lineTo(ox, 10); ctx.stroke();
+
+        // Arrows & Labels
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('x', width - 20, oy - 10);
+        ctx.fillText('y', ox + 10, 20);
+        ctx.fillText('O(0|0)', ox - 35, oy + 18);
+
+        // Ticks
+        for (let i = -5; i <= 5; i++) {
+            if (i === 0) continue;
+            ctx.fillText(i, ox + i * scale - 5, oy + 15);
+            ctx.fillText(-i, ox - 18, oy + i * scale + 4);
+        }
+    }
+
+    // Point Probe Interactive Tool
+    function calcPointProbe() {
+        const x = parseFloat(document.getElementById('ptX').value);
+        const y = parseFloat(document.getElementById('ptY').value);
+        const res = document.getElementById('probeResult');
+
+        if(isNaN(x) || isNaN(y)) {
+            res.innerText = 'Bitte gültige Zahlen eingeben.';
+            return;
+        }
+
+        const expectedY = 3.5 * x;
+        if (Math.abs(expectedY - y) < 0.0001) {
+            res.style.background = '#dcfce7';
+            res.style.color = '#15803d';
+            res.innerHTML = `✅ Richtig! \\(f(${x}) = 3{,}5 \\cdot ${x} = ${expectedY}\\). Der Punkt \\(P(${x}|${y})\\) liegt auf dem Graphen.`;
+        } else {
+            res.style.background = '#fee2e2';
+            res.style.color = '#b91c1c';
+            res.innerHTML = `❌ Leider falsch! \\(f(${x}) = 3{,}5 \\cdot ${x} = ${expectedY} \\neq ${y}\\). Der Punkt liegt **nicht** auf dem Graphen.`;
+        }
+        if(window.renderMathInElement) renderMathInElement(res);
+    }
+
+    // Check Merkeintrag Dropdowns
+    function checkMerkeintrag() {
+        const g1 = document.getElementById('gap1').value === 'true';
+        const g2 = document.getElementById('gap2').value === 'true';
+        const g3 = document.getElementById('gap3').value === 'true';
+        const g4 = document.getElementById('gap4').value === 'true';
+        const g5 = document.getElementById('gap5').value === 'true';
+        const g6 = document.getElementById('gap6').value === 'true';
+
+        if(g1 && g2 && g3 && g4 && g5 && g6) {
+            alert('Super gemacht! Alle Lücken sind richtig ausgefüllt.');
+            document.getElementById('finalMerkbox').style.display = 'block';
+            if(window.renderMathInElement) renderMathInElement(document.getElementById('finalMerkbox'));
+        } else {
+            alert('Noch nicht ganz richtig! Überprüfe deine Auswahlen noch einmal.');
+        }
+    }
+
+    // Initialize KaTeX Formatting safely
+    function initKaTeX() {
+        if(window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '\\(', right: '\\)', display: false}
+                ]
+            });
+        }
+    }
+
+    // Initial draw on page load
+    window.onload = function() {
+        updateCanvas1();
+        updateCanvas2();
+    };
+</script>
+
+</body>
+</html>
